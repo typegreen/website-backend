@@ -15,10 +15,9 @@ try {
         $dbUser,
         $dbPass,
         [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_SSL_MODE           => PDO::SSL_MODE_REQUIRE,  // Critical for Supabase
-            PDO::ATTR_PERSISTENT         => false                   // Better for serverless
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_SSL_MODE => PDO::SSL_MODE_REQUIRE, // Enforce SSL
+            PDO::ATTR_PERSISTENT => false               
         ]
     );
 } catch (PDOException $e) {
