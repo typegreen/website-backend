@@ -16,8 +16,9 @@ try {
         $dbPass,
         [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_SSL_MODE => PDO::SSL_MODE_REQUIRE, // Enforce SSL
-            PDO::ATTR_PERSISTENT => false               
+            PDO::ATTR_SSL_MODE => PDO::SSL_MODE_VERIFY_FULL, // Strict SSL validation
+            PDO::ATTR_PERSISTENT => false,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
         ]
     );
 } catch (PDOException $e) {
