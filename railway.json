@@ -3,11 +3,7 @@
     "builder": "nixpacks",
     "config": {
       "phpVersion": "8.2",
-      "startCommand": "php -S 0.0.0.0:$PORT -t backendfiles",
-      "nixpacks": {
-        "baseImage": "debian:bookworm",
-        "packages": ["php82-pdo-pgsql"]
-      }
+      "startCommand": "php -S 0.0.0.0:$PORT -t backendfiles"
     }
   }
 }
