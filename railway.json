@@ -10,4 +10,5 @@
         "copyTo": "/etc/ssl/certs/supabase.crt"
     }
   }
+  }
 }
