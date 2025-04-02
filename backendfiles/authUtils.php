@@ -16,9 +16,8 @@ try {
         $dbPass,
         [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_SSL_MODE => PDO::SSL_MODE_VERIFY_FULL, // Strict SSL validation
-            PDO::ATTR_PERSISTENT => false,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+            PDO::ATTR_SSL_MODE => PDO::SSL_MODE_VERIFY_FULL,
+            PDO::ATTR_SSL_CERT => '/etc/ssl/certs/ca-certificates.crt' // Standard Linux cert path
         ]
     );
 } catch (PDOException $e) {
