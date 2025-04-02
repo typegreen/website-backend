@@ -6,9 +6,8 @@
       "startCommand": "php -S 0.0.0.0:$PORT -t backendfiles",
       "nixpacks": {
         "baseImage": "debian:bookworm",
-        "packages": ["php82-pdo-pgsql", "ca-certificates"],
-        "copyTo": "/etc/ssl/certs/supabase.crt"
+        "packages": ["php82-pdo-pgsql"]
+      }
     }
-  }
   }
 }

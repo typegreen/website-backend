@@ -11,13 +11,12 @@ $dbPort = getenv('DB_PORT') ?: '5432';
 // Secure PostgreSQL connection with SSL enforcement
 try {
     $conn = new PDO(
-        "pgsql:host=$dbHost;port=$dbPort;dbname=$dbName",
-        $dbUser,
-        $dbPass,
+        "pgsql:host=" . getenv('DB_HOST') . ";port=" . getenv('DB_PORT') . ";dbname=" . getenv('DB_NAME'),
+        getenv('DB_USER'),
+        getenv('DB_PASSWORD'),
         [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_SSL_MODE => PDO::SSL_MODE_VERIFY_FULL,
-            PDO::ATTR_SSL_CERT => '/etc/ssl/certs/ca-certificates.crt' // Standard Linux cert path
+            PDO::ATTR_SSL_MODE => PDO::SSL_MODE_VERIFY_FULL
         ]
     );
 } catch (PDOException $e) {
