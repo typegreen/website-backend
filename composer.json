@@ -1,5 +1,5 @@
 {
-    "name": "website-backend",
+    "name": "typegreen/website-backend",
     "require": {
       "php": "8.2",
       "ext-pdo": "*"
