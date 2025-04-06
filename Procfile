@@ -1,0 +1,1 @@
+echo "web: composer start" > Procfile

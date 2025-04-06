@@ -9,10 +9,9 @@
     "scripts": {
       "start": "php -S 0.0.0.0:$PORT -t ."
     },
-    "config": {
-      "platform": {
-        "php": "8.2"
-      },
-      "optimize-autoloader": true
+    "extra": {
+      "railway": {
+        "startCommand": "composer start"
+      }
     }
   }
