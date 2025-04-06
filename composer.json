@@ -1,5 +1,5 @@
 {
-    "name": "Thesis-Backend",
+    "name": "website-backend",
     "require": {
       "php": "8.2",
       "ext-pdo": "*"
