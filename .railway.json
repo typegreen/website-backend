@@ -1,0 +1,9 @@
+{
+    "build": {
+      "builder": "nixpacks",
+      "buildCommand": "echo 'Overriding Nixpacks defaults'"
+    },
+    "deploy": {
+      "startCommand": "php -S 0.0.0.0:$PORT -t ."
+    }
+  }

@@ -1,33 +1,26 @@
 <?php
 header("Content-Type: application/json");
-error_reporting(E_ALL);
 
-// Debug environment variables
-$env = [
-    'DB_HOST' => getenv('DB_HOST'),
-    'DB_PORT' => getenv('DB_PORT'),
-    'DB_NAME' => getenv('DB_NAME'),
-    'PHP_VERSION' => phpversion()
-];
+// 1. Verify PHP is running
+file_put_contents('php://stderr', "=== TEST_DB.PH P STARTED ===\n");
 
+// 2. Log all environment variables
+file_put_contents('php://stderr', print_r($_ENV, true));
+
+// 3. Test database connection
 try {
-    $dsn = "pgsql:host={$env['DB_HOST']};port={$env['DB_PORT']};dbname={$env['DB_NAME']};sslmode=require";
+    $dsn = "pgsql:host=" . getenv('DB_HOST') . ";port=" . getenv('DB_PORT') . ";dbname=" . getenv('DB_NAME') . ";sslmode=require";
+    file_put_contents('php://stderr', "DSN: $dsn\n");
+    
     $conn = new PDO($dsn, getenv('DB_USER'), getenv('DB_PASSWORD'), [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_TIMEOUT => 3
     ]);
     
-    echo json_encode([
-        "success" => true,
-        "env" => $env,
-        "version" => $conn->query("SELECT version()")->fetchColumn()
-    ]);
+    echo json_encode(["success" => true]);
 } catch (PDOException $e) {
+    file_put_contents('php://stderr', "ERROR: " . $e->getMessage() . "\n");
     http_response_code(500);
-    echo json_encode([
-        "error" => "Connection failed",
-        "env" => $env,
-        "details" => $e->getMessage()
-    ]);
+    echo json_encode(["error" => $e->getMessage()]);
 }
 ?>
