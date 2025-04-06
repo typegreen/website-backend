@@ -2,7 +2,8 @@
     "name": "typegreen/website-backend",
     "require": {
       "php": "8.2",
-      "ext-pdo": "*"
+      "ext-pdo": "*",
+      "ext-pdo_pgsql": "*"
     },
     "scripts": {
       "start": "php -S 0.0.0.0:$PORT"
