@@ -1,30 +1,27 @@
 <?php
-// Handle OPTIONS request first
+header("Access-Control-Allow-Origin: https://website-application-ndfutubgk-pauls-projects-7496f616.vercel.app/");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Credentials: true");
+header("Content-Type: application/json");
+header("Access-Control-Max-Age: 3600");
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    header("Access-Control-Allow-Origin: http://localhost:3000");
-    header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-    header("Access-Control-Allow-Headers: Content-Type, Authorization");
-    header("Access-Control-Allow-Credentials: true");
-    header("Content-Type: application/json");
-    header("Access-Control-Max-Age: 3600");
     http_response_code(200);
     exit();
 }
 
-// Regular headers for other requests
-header("Access-Control-Allow-Origin: http://localhost:3000");
-header("Access-Control-Allow-Credentials: true");
-header("Content-Type: application/json");
-
 function getAuthorizationHeader() {
     $headers = null;
-    if (function_exists('apache_request_headers')) {
+    if (isset($_SERVER['Authorization'])) {
+        $headers = trim($_SERVER['Authorization']);
+    } elseif (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+        $headers = trim($_SERVER['HTTP_AUTHORIZATION']);
+    } elseif (function_exists('apache_request_headers')) {
         $requestHeaders = apache_request_headers();
-        $headers = $requestHeaders['Authorization'] ?? $requestHeaders['authorization'] ?? null;
-    } else {
-        $headers = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['Authorization'] ?? null;
+        $headers = trim($requestHeaders['Authorization'] ?? '');
     }
-    return $headers ? trim($headers) : null;
+    return $headers;
 }
 
 function verifyAdminAccess($conn) {
@@ -41,9 +38,11 @@ function verifyAdminAccess($conn) {
 
     $userId = $matches[1];
     $sql = "SELECT ACCESS_LEVEL FROM ACCOUNTS WHERE USER_ID = ?";
-    $stmt = sqlsrv_query($conn, $sql, [$userId]);
-    
-    if (!$stmt || !$row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+    $stmt = $conn->prepare($sql);
+    $stmt->execute([$userId]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$row) {
         http_response_code(403);
         die(json_encode(["error" => "User not found"]));
     }
