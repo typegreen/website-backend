@@ -1,1 +1,1 @@
-echo "web: composer start" > Procfile
+web: php -S 0.0.0.0:$PORT -t public
