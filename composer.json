@@ -1,0 +1,10 @@
+{
+    "name": "Thesis-Backend",
+    "require": {
+      "php": "8.2",
+      "ext-pdo": "*"
+    },
+    "scripts": {
+      "start": "php -S 0.0.0.0:$PORT"
+    }
+  }
