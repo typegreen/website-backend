@@ -1,19 +1,33 @@
 <?php
 header("Content-Type: application/json");
-require_once __DIR__ . '/db.php';
+error_reporting(E_ALL);
+
+// Debug environment variables
+$env = [
+    'DB_HOST' => getenv('DB_HOST'),
+    'DB_PORT' => getenv('DB_PORT'),
+    'DB_NAME' => getenv('DB_NAME'),
+    'PHP_VERSION' => phpversion()
+];
 
 try {
-    $conn = getDBConnection();
-    $stmt = $conn->query("SELECT 1 AS test"); // Simple PostgreSQL query
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if ($result['test'] == 1) {
-        echo json_encode(["success" => true, "message" => "Database connection successful!"]);
-    } else {
-        throw new Exception("Unexpected query result");
-    }
+    $dsn = "pgsql:host={$env['DB_HOST']};port={$env['DB_PORT']};dbname={$env['DB_NAME']};sslmode=require";
+    $conn = new PDO($dsn, getenv('DB_USER'), getenv('DB_PASSWORD'), [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_TIMEOUT => 3
+    ]);
+    
+    echo json_encode([
+        "success" => true,
+        "env" => $env,
+        "version" => $conn->query("SELECT version()")->fetchColumn()
+    ]);
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(["error" => "Database connection failed", "details" => $e->getMessage()]);
+    echo json_encode([
+        "error" => "Connection failed",
+        "env" => $env,
+        "details" => $e->getMessage()
+    ]);
 }
 ?>
