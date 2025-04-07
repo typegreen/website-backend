@@ -7,7 +7,7 @@ $host = 'aws-0-us-east-1.pooler.supabase.com';
 $port = '5432';
 $db   = 'postgres';
 $user = 'postgres.oyicdamiuhqlwqckxjpe';
-$pass = 'VCmwfXj9vnALfsaZd';
+$pass = 'your_actual_supabase_password';
 $dsn  = "pgsql:host=$host;port=$port;dbname=$db;";
 try {
     $pdo = new PDO($dsn, $user, $pass, [
@@ -17,23 +17,8 @@ try {
     die("Connection failed: " . $e->getMessage());
 }
 
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
-$host = 'aws-0-us-east-1.pooler.supabase.com';
-$port = '5432';
-$db   = 'postgres';
-$user = 'postgres.oyicdamiuhqlwqckxjpe';
-$pass = 'VCmwfXj9vnALfsaZ'; // Replace with env variable or actual password
-$dsn = "pgsql:host=$host;port=$port;dbname=$db;";
-try {
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ]);
-} catch (PDOException $e) {
-    die("Connection failed: " . $e->getMessage());
-}
-
 // Enhanced CORS and security headers
+header("Access-Control-Allow-Origin: http://localhost:3000");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header("Access-Control-Allow-Credentials: true");
@@ -49,16 +34,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Database configuration
-$serverName = "MSI";
-$connectionOptions = [
-    "Database" => "Thesis",
-    "Uid" => "", // Add your username
-    "PWD" => "", // Add your password
     "CharacterSet" => "UTF-8"
 ];
 
 // Connect to SQL Server with error handling
-$conn = sqlsrv_connect($serverName, $connectionOptions);
 if ($conn === false) {
     error_log("Database connection failed: " . print_r(sqlsrv_errors(), true));
     http_response_code(500);
@@ -124,7 +103,8 @@ $sql = "SELECT
         ORDER BY DATE_OF_DETECTION DESC";
 
 $params = array($userId);
-$stmt = sqlsrv_query($conn, $sql, $params);
+$stmt = $pdo->prepare($sql, $params);
+$stmt->execute();
 
 if ($stmt === false) {
     error_log("Query failed: " . print_r(sqlsrv_errors(), true));
@@ -137,7 +117,7 @@ if ($stmt === false) {
 
 // Process and sanitize results
 $results = [];
-while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+$row = $stmt->fetch(PDO::FETCH_ASSOC);
     $timeDisplay = 'N/A';
     if (!empty($row['rawTime'])) {
         $timeParts = explode(':', $row['rawTime']);
@@ -157,7 +137,6 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
         'time' => htmlspecialchars($timeDisplay),
         'location' => htmlspecialchars($row['location']),
         'classification' => htmlspecialchars($row['classification']),
-        'img' => 'webapp/Thesis/website-backend/assets/' . 
                 htmlspecialchars(basename($row['img']))
     ];
 }

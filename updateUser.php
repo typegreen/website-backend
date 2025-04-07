@@ -7,7 +7,7 @@ $host = 'aws-0-us-east-1.pooler.supabase.com';
 $port = '5432';
 $db   = 'postgres';
 $user = 'postgres.oyicdamiuhqlwqckxjpe';
-$pass = 'VCmwfXj9vnALfsaZ';
+$pass = 'your_actual_supabase_password';
 $dsn  = "pgsql:host=$host;port=$port;dbname=$db;";
 try {
     $pdo = new PDO($dsn, $user, $pass, [
@@ -17,29 +17,8 @@ try {
     die("Connection failed: " . $e->getMessage());
 }
 
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
-$host = 'aws-0-us-east-1.pooler.supabase.com';
-$port = '5432';
-$db   = 'postgres';
-$user = 'postgres.oyicdamiuhqlwqckxjpe';
-$pass = 'VCmwfXj9vnALfsaZ'; // Replace with env variable or actual password
-$dsn = "pgsql:host=$host;port=$port;dbname=$db;";
-try {
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ]);
-} catch (PDOException $e) {
-    die("Connection failed: " . $e->getMessage());
-}
-
 require_once 'authUtils.php';
 
-$serverName = "MSI";
-$connectionOptions = [
-    "Database" => "Thesis",
-    "Uid" => "", // Your username
-    "PWD" => "", // Your password
     "CharacterSet" => "UTF-8"
 ];
 
@@ -58,7 +37,8 @@ if ($input['id'] == $adminId && $input['accessLevel'] !== 'ADMIN') {
 }
 
 $sql = "UPDATE ACCOUNTS SET ACCESS_LEVEL = ? WHERE USER_ID = ?";
-$stmt = sqlsrv_query($conn, $sql, [$input['accessLevel'], $input['id']]);
+$stmt = $pdo->prepare($sql, [$input['accessLevel'], $input['id']]);
+$stmt->execute();
 
 if ($stmt) {
     echo json_encode(["success" => true]);

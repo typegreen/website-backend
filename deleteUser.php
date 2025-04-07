@@ -7,7 +7,7 @@ $host = 'aws-0-us-east-1.pooler.supabase.com';
 $port = '5432';
 $db   = 'postgres';
 $user = 'postgres.oyicdamiuhqlwqckxjpe';
-$pass = 'VCmwfXj9vnALfsaZ';
+$pass = 'your_actual_supabase_password';
 $dsn  = "pgsql:host=$host;port=$port;dbname=$db;";
 try {
     $pdo = new PDO($dsn, $user, $pass, [
@@ -17,22 +17,7 @@ try {
     die("Connection failed: " . $e->getMessage());
 }
 
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
-$host = 'aws-0-us-east-1.pooler.supabase.com';
-$port = '5432';
-$db   = 'postgres';
-$user = 'postgres.oyicdamiuhqlwqckxjpe';
-$pass = 'VCmwfXj9vnALfsaZ'; // Replace with env variable or actual password
-$dsn = "pgsql:host=$host;port=$port;dbname=$db;";
-try {
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ]);
-} catch (PDOException $e) {
-    die("Connection failed: " . $e->getMessage());
-}
-
+header("Access-Control-Allow-Origin: http://localhost:3000");
 header("Access-Control-Allow-Methods: DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Credentials: true");
@@ -47,16 +32,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once 'authUtils.php';
 
 // Database configuration
-$serverName = "MSI";
-$connectionOptions = [
-    "Database" => "Thesis",
-    "Uid" => "", // Your username
-    "PWD" => "", // Your password
     "CharacterSet" => "UTF-8"
 ];
 
 // Connect to database
-$conn = sqlsrv_connect($serverName, $connectionOptions);
 if ($conn === false) {
     http_response_code(500);
     die(json_encode([
@@ -81,16 +60,17 @@ try {
 
     // First verify user exists
     $checkSql = "SELECT USER_ID FROM ACCOUNTS WHERE USER_ID = ?";
-    $checkStmt = sqlsrv_query($conn, $checkSql, [$userIdToDelete]);
+$stmt = $pdo->prepare($checkSql, [$userIdToDelete]);
+$stmt->execute();
     
-    if (!$checkStmt || !sqlsrv_fetch_array($checkStmt, SQLSRV_FETCH_ASSOC)) {
         http_response_code(404);
         die(json_encode(["error" => "User not found"]));
     }
 
     // Delete user
     $deleteSql = "DELETE FROM ACCOUNTS WHERE USER_ID = ?";
-    $deleteStmt = sqlsrv_query($conn, $deleteSql, [$userIdToDelete]);
+$stmt = $pdo->prepare($deleteSql, [$userIdToDelete]);
+$stmt->execute();
     
     if ($deleteStmt === false) {
         throw new Exception("Delete operation failed");

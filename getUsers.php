@@ -7,7 +7,7 @@ $host = 'aws-0-us-east-1.pooler.supabase.com';
 $port = '5432';
 $db   = 'postgres';
 $user = 'postgres.oyicdamiuhqlwqckxjpe';
-$pass = 'VCmwfXj9vnALfsaZ';
+$pass = 'your_actual_supabase_password';
 $dsn  = "pgsql:host=$host;port=$port;dbname=$db;";
 try {
     $pdo = new PDO($dsn, $user, $pass, [
@@ -17,34 +17,12 @@ try {
     die("Connection failed: " . $e->getMessage());
 }
 
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
-$host = 'aws-0-us-east-1.pooler.supabase.com';
-$port = '5432';
-$db   = 'postgres';
-$user = 'postgres.oyicdamiuhqlwqckxjpe';
-$pass = 'VCmwfXj9vnALfsaZ'; // Replace with env variable or actual password
-$dsn = "pgsql:host=$host;port=$port;dbname=$db;";
-try {
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ]);
-} catch (PDOException $e) {
-    die("Connection failed: " . $e->getMessage());
-}
-
 require_once 'authUtils.php';
 
 // Database connection
-$serverName = "MSI";
-$connectionOptions = [
-    "Database" => "Thesis",
-    "Uid" => "", // Your username
-    "PWD" => "", // Your password
     "CharacterSet" => "UTF-8"
 ];
 
-$conn = sqlsrv_connect($serverName, $connectionOptions);
 if ($conn === false) {
     header('Content-Type: application/json');
     http_response_code(500);
@@ -55,14 +33,15 @@ try {
     $userId = verifyAdminAccess($conn); // Will exit if not admin
 
     $sql = "SELECT USER_ID as id, USER_NAME as username, ACCESS_LEVEL as accessLevel FROM ACCOUNTS";
-    $stmt = sqlsrv_query($conn, $sql);
+$stmt = $pdo->prepare($sql);
+$stmt->execute();
 
     if ($stmt === false) {
         throw new Exception("Failed to fetch users");
     }
 
     $users = [];
-    while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+$row = $stmt->fetch(PDO::FETCH_ASSOC);
         $users[] = $row;
     }
 

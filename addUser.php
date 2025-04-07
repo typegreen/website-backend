@@ -7,7 +7,7 @@ $host = 'aws-0-us-east-1.pooler.supabase.com';
 $port = '5432';
 $db   = 'postgres';
 $user = 'postgres.oyicdamiuhqlwqckxjpe';
-$pass = 'VCmwfXj9vnALfsaZ';
+$pass = 'your_actual_supabase_password';
 $dsn  = "pgsql:host=$host;port=$port;dbname=$db;";
 try {
     $pdo = new PDO($dsn, $user, $pass, [
@@ -17,22 +17,7 @@ try {
     die("Connection failed: " . $e->getMessage());
 }
 
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
-$host = 'aws-0-us-east-1.pooler.supabase.com';
-$port = '5432';
-$db   = 'postgres';
-$user = 'postgres.oyicdamiuhqlwqckxjpe';
-$pass = 'VCmwfXj9vnALfsaZ'; // Replace with env variable or actual password
-$dsn = "pgsql:host=$host;port=$port;dbname=$db;";
-try {
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ]);
-} catch (PDOException $e) {
-    die("Connection failed: " . $e->getMessage());
-}
-
+header("Access-Control-Allow-Origin: http://localhost:3000");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Credentials: true");
@@ -45,16 +30,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Database configuration
-$serverName = "MSI";
-$connectionOptions = [
-    "Database" => "Thesis",
-    "Uid" => "", // Your username
-    "PWD" => "", // Your password
     "CharacterSet" => "UTF-8"
 ];
 
 // Connect to database
-$conn = sqlsrv_connect($serverName, $connectionOptions);
 if ($conn === false) {
     http_response_code(500);
     die(json_encode(["error" => "Database connection failed", "details" => sqlsrv_errors()]));
@@ -76,13 +55,13 @@ try {
     // Check if username exists
     $checkSql = "SELECT USER_ID FROM ACCOUNTS WHERE USER_NAME = ?";
     $checkParams = [$input['username']];
-    $checkStmt = sqlsrv_query($conn, $checkSql, $checkParams);
+$stmt = $pdo->prepare($checkSql, $checkParams);
+$stmt->execute();
     
     if ($checkStmt === false) {
         throw new Exception("Check username query failed");
     }
     
-    if (sqlsrv_fetch_array($checkStmt, SQLSRV_FETCH_ASSOC)) {
         http_response_code(409);
         die(json_encode(["error" => "Username already exists"]));
     }
@@ -95,7 +74,8 @@ try {
         strtoupper($input['accessLevel'])
     ];
     
-    $insertStmt = sqlsrv_query($conn, $insertSql, $insertParams);
+$stmt = $pdo->prepare($insertSql, $insertParams);
+$stmt->execute();
     
     if ($insertStmt === false) {
         throw new Exception("Insert user query failed");
@@ -104,8 +84,8 @@ try {
     // Get the new user ID
     $newId = null;
     $getIdSql = "SELECT SCOPE_IDENTITY() AS new_id";
-    $getIdStmt = sqlsrv_query($conn, $getIdSql);
-    if ($getIdStmt && sqlsrv_fetch_array($getIdStmt, SQLSRV_FETCH_ASSOC)) {
+$stmt = $pdo->prepare($getIdSql);
+$stmt->execute();
         $newId = sqlsrv_get_field($getIdStmt, 0);
     }
 
