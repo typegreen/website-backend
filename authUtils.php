@@ -6,7 +6,7 @@ $host = 'aws-0-us-east-1.pooler.supabase.com';
 $port = '5432';
 $db   = 'postgres';
 $user = 'postgres.oyicdamiuhqlwqckxjpe';
-$pass = 'YOUR_SUPABASE_PASSWORD'; // Replace with env variable or actual password
+$pass = 'VCmwfXj9vnALfsaZ'; // Replace with env variable or actual password
 $dsn = "pgsql:host=$host;port=$port;dbname=$db;";
 try {
     $pdo = new PDO($dsn, $user, $pass, [
