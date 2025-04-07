@@ -8,11 +8,20 @@ function respond($status, $data) {
     echo json_encode(["status" => $status, "response" => $data]);
 }
 
-$data = json_decode(file_get_contents("php://input"), true);
-$user_id = $data['user_id'];
-$ch = curl_init();
 $apiKey = getenv("SUPABASE_API_KEY");
+if (!$apiKey) {
+    respond(500, "❌ SUPABASE_API_KEY is missing.");
+    exit;
+}
 
+$data = json_decode(file_get_contents("php://input"), true);
+if (!isset($data['user_id']) || !is_numeric($data['user_id'])) {
+    respond(400, array("error" => "Invalid or missing user_id"));
+    exit;
+}
+$user_id = intval($data['user_id']);
+
+$ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, "https://oyicdamiuhqlwqckxjpe.supabase.co/rest/v1/accounts?user_id=eq." . $user_id);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
