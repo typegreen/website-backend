@@ -3,13 +3,17 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
-$host = 'aws-0-us-east-1.pooler.supabase.com';
+$host = 'db.oyicdamiuhqlwqckxjpe.supabase.co'; // ✅ Direct DB host
 $port = '5432';
 $db   = 'postgres';
-$user = 'postgres.oyicdamiuhqlwqckxjpe';
-$pass = 'SimpleNewTest'; // ✅ this is the correct password
+$user = 'postgres'; // ✅ Direct DB user
+$pass = 'SimpleNewTest'; // ✅ Password you reset
 $dsn  = "pgsql:host=$host;port=$port;dbname=$db;";
 
+echo "Trying to connect with the following config:<br>";
+echo "Host: $host<br>";
+echo "Port: $port<br>";
+echo "DB: $db<br>";
 echo "User: $user<br>";
 echo "Password: $pass<br>";
 echo "DSN: $dsn<br><br>";
@@ -18,8 +22,8 @@ try {
     $pdo = new PDO($dsn, $user, $pass, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
     ]);
-    echo "✅ Connected to Supabase successfully!";
+    echo "✅ Successfully connected to Supabase using direct DB connection.";
 } catch (PDOException $e) {
-    die("❌ Connection failed: " . $e->getMessage());
+    echo "❌ Connection failed: " . $e->getMessage();
 }
 ?>
