@@ -7,7 +7,7 @@ $host = 'aws-0-us-east-1.pooler.supabase.com';
 $port = '5432';
 $db   = 'postgres';
 $user = 'postgres.oyicdamiuhqlwqckxjpe';
-$pass = 'VCmwfXj9vnALfsaZ'; // ✅ this is the correct password
+$pass = 'SimpleNewTest'; // ✅ this is the correct password
 $dsn  = "pgsql:host=$host;port=$port;dbname=$db;";
 
 try {
