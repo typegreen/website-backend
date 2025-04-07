@@ -10,6 +10,10 @@ $user = 'postgres.oyicdamiuhqlwqckxjpe';
 $pass = 'SimpleNewTest'; // ✅ this is the correct password
 $dsn  = "pgsql:host=$host;port=$port;dbname=$db;";
 
+echo "User: $user<br>";
+echo "Password: $pass<br>";
+echo "DSN: $dsn<br><br>";
+
 try {
     $pdo = new PDO($dsn, $user, $pass, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
