@@ -8,9 +8,17 @@ function respond($status, $data) {
     echo json_encode(["status" => $status, "response" => $data]);
 }
 
-$ch = curl_init();
+// 🔍 DEBUG: Uncomment this to check if your API key is loaded
+// var_dump(getenv("SUPABASE_API_KEY"));
+
 $apiKey = getenv("SUPABASE_API_KEY");
 
+if (!$apiKey) {
+    respond(500, "❌ Environment variable SUPABASE_API_KEY is not found.");
+    exit;
+}
+
+$ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, "https://oyicdamiuhqlwqckxjpe.supabase.co/rest/v1/accounts");
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_HTTPHEADER, [
@@ -20,4 +28,5 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, [
 $result = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
+
 respond($httpCode, json_decode($result, true));
