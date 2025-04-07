@@ -1,16 +1,21 @@
 <?php
-<<<<<<< HEAD
-require_once __DIR__ . '/authUtils.php';
-require_once __DIR__ . '/db.php';
-$conn = getDBConnection();
-
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+$host = 'aws-0-us-east-1.pooler.supabase.com';
+$port = '5432';
+$db   = 'postgres';
+$user = 'postgres.oyicdamiuhqlwqckxjpe';
+$pass = 'YOUR_SUPABASE_PASSWORD'; // Replace with env variable or actual password
+$dsn = "pgsql:host=$host;port=$port;dbname=$db;";
 try {
-    $adminId = verifyAdminAccess($conn); // Will exit if not admin
+    $pdo = new PDO($dsn, $user, $pass, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+    ]);
+} catch (PDOException $e) {
+    die("Connection failed: " . $e->getMessage());
+}
 
-    $sql = "SELECT USER_ID as id, USER_NAME as username, ACCESS_LEVEL as accessLevel FROM ACCOUNTS";
-    $stmt = $conn->prepare($sql);
-    $stmt->execute();
-=======
 require_once 'authUtils.php';
 
 // Database connection
@@ -34,34 +39,23 @@ try {
 
     $sql = "SELECT USER_ID as id, USER_NAME as username, ACCESS_LEVEL as accessLevel FROM ACCOUNTS";
     $stmt = sqlsrv_query($conn, $sql);
->>>>>>> 2564443 (Testing)
 
     if ($stmt === false) {
         throw new Exception("Failed to fetch users");
     }
 
     $users = [];
-<<<<<<< HEAD
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-=======
     while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
->>>>>>> 2564443 (Testing)
         $users[] = $row;
     }
 
     header('Content-Type: application/json');
     echo json_encode($users);
-<<<<<<< HEAD
-
-=======
     
->>>>>>> 2564443 (Testing)
 } catch (Exception $e) {
     header('Content-Type: application/json');
     http_response_code(500);
     echo json_encode(["error" => $e->getMessage()]);
-<<<<<<< HEAD
-=======
 } finally {
     if (isset($stmt)) {
         sqlsrv_free_stmt($stmt);
@@ -69,6 +63,5 @@ try {
     if (isset($conn)) {
         sqlsrv_close($conn);
     }
->>>>>>> 2564443 (Testing)
 }
 ?>

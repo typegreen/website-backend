@@ -1,9 +1,21 @@
 <?php
-<<<<<<< HEAD
-require_once __DIR__ . '/authUtils.php';
-require_once __DIR__ . '/db.php';
-$conn = getDBConnection();
-=======
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+$host = 'aws-0-us-east-1.pooler.supabase.com';
+$port = '5432';
+$db   = 'postgres';
+$user = 'postgres.oyicdamiuhqlwqckxjpe';
+$pass = 'YOUR_SUPABASE_PASSWORD'; // Replace with env variable or actual password
+$dsn = "pgsql:host=$host;port=$port;dbname=$db;";
+try {
+    $pdo = new PDO($dsn, $user, $pass, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+    ]);
+} catch (PDOException $e) {
+    die("Connection failed: " . $e->getMessage());
+}
+
 // Enhanced CORS and security headers
 header("Access-Control-Allow-Origin: http://localhost:3000");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE");
@@ -59,7 +71,6 @@ function getAuthorizationHeader() {
     }
     return $headers;
 }
->>>>>>> 2564443 (Testing)
 
 $authHeader = getAuthorizationHeader();
 $userId = null;
@@ -72,10 +83,7 @@ if (!empty($authHeader)) {
     }
 }
 
-<<<<<<< HEAD
-=======
 // Validate user ID
->>>>>>> 2564443 (Testing)
 if (!$userId || !is_numeric($userId)) {
     http_response_code(401);
     die(json_encode([
@@ -84,14 +92,6 @@ if (!$userId || !is_numeric($userId)) {
     ]));
 }
 
-<<<<<<< HEAD
-$sql = "SELECT 
-          IMAGE_CODE as imageCode,
-          TO_CHAR(DATE_OF_DETECTION, 'YYYY-MM-DD') as date,
-          CASE
-            WHEN TIME_OF_DETECTION IS NULL THEN '00:00:00'
-            ELSE TO_CHAR(TIME_OF_DETECTION, 'HH24:MI:SS')
-=======
 // Secure database query with parameterization
 $sql = "SELECT 
           IMAGE_CODE as imageCode,
@@ -99,22 +99,12 @@ $sql = "SELECT
           CASE
             WHEN TIME_OF_DETECTION IS NULL THEN '00:00:00'
             ELSE CONVERT(varchar, TIME_OF_DETECTION, 108)
->>>>>>> 2564443 (Testing)
           END as rawTime,
           LOCATION as location,
           CLASSIFICATION as classification,
           RICE_CROP_IMAGE as img
         FROM DETECTION_LOGS
         WHERE USER_ID = ?
-<<<<<<< HEAD
-        ORDER BY LOG_ID ASC";
-
-$stmt = $conn->prepare($sql);
-$stmt->execute([$userId]);
-$results = [];
-
-while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-=======
         ORDER BY DATE_OF_DETECTION DESC";
 
 $params = array($userId);
@@ -132,7 +122,6 @@ if ($stmt === false) {
 // Process and sanitize results
 $results = [];
 while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
->>>>>>> 2564443 (Testing)
     $timeDisplay = 'N/A';
     if (!empty($row['rawTime'])) {
         $timeParts = explode(':', $row['rawTime']);
@@ -157,21 +146,15 @@ while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
     ];
 }
 
-<<<<<<< HEAD
-=======
 // Return JSON response
->>>>>>> 2564443 (Testing)
 http_response_code(200);
 echo json_encode([
     "success" => true,
     "data" => $results,
     "count" => count($results)
 ], JSON_UNESCAPED_SLASHES);
-<<<<<<< HEAD
-=======
 
 // Close connection
 sqlsrv_free_stmt($stmt);
 sqlsrv_close($conn);
->>>>>>> 2564443 (Testing)
 ?>
