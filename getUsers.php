@@ -1,41 +1,23 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
-$host = 'aws-0-us-east-1.pooler.supabase.com';
-$port = '5432';
-$db   = 'postgres';
-$user = 'postgres.oyicdamiuhqlwqckxjpe';
-$pass = 'SimpleNewTest';
-$dsn  = "pgsql:host=$host;port=$port;dbname=$db;";
-
-try {
-    $pdo = new PDO($dsn, $user, $pass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ]);
-} catch (PDOException $e) {
-    die("Connection failed: " . $e->getMessage());
+function respond($status, $data) {
+    header("Content-Type: application/json");
+    echo json_encode(["status" => $status, "response" => $data]);
 }
 
-require_once 'authUtils.php';
+$ch = curl_init();
+$apiKey = getenv("SUPABASE_API_KEY");
 
-try {
-    // Update this to use $pdo if verifyAdminAccess needs DB access
-    $userId = verifyAdminAccess($pdo); // <-- pass $pdo, not $conn
-
-    $sql = "SELECT USER_ID as id, USER_NAME as username, ACCESS_LEVEL as accessLevel FROM ACCOUNTS";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute();
-
-    $users = $stmt->fetchAll(PDO::FETCH_ASSOC); // ✅ fetch all rows
-
-    header('Content-Type: application/json');
-    echo json_encode($users);
-    
-} catch (Exception $e) {
-    header('Content-Type: application/json');
-    http_response_code(500);
-    echo json_encode(["error" => $e->getMessage()]);
-}
-?>
+curl_setopt($ch, CURLOPT_URL, "https://oyicdamiuhqlwqckxjpe.supabase.co/rest/v1/accounts");
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    "apikey: $apiKey",
+    "Authorization: Bearer $apiKey"
+]);
+$result = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+respond($httpCode, json_decode($result, true));

@@ -1,48 +1,33 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
-$host = 'aws-0-us-east-1.pooler.supabase.com';
-$port = '5432';
-$db   = 'postgres';
-$user = 'postgres.oyicdamiuhqlwqckxjpe';
-$pass = 'your_actual_supabase_password';
-$dsn  = "pgsql:host=$host;port=$port;dbname=$db;";
-try {
-    $pdo = new PDO($dsn, $user, $pass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ]);
-} catch (PDOException $e) {
-    die("Connection failed: " . $e->getMessage());
+function respond($status, $data) {
+    header("Content-Type: application/json");
+    echo json_encode(["status" => $status, "response" => $data]);
 }
 
-if (!$conn) die(json_encode(["error" => "Connection failed"]));
+$data = json_decode(file_get_contents("php://input"), true);
+$user_name = $data['user_name'];
+$password = $data['password'];
+$apiKey = getenv("SUPABASE_API_KEY");
 
-$input = json_decode(file_get_contents('php://input'), true);
-$username = $input['username'] ?? '';
-$password = $input['password'] ?? '';
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, "https://oyicdamiuhqlwqckxjpe.supabase.co/rest/v1/accounts?user_name=eq." . urlencode($user_name));
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    "apikey: $apiKey",
+    "Authorization: Bearer $apiKey"
+]);
+$result = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
 
-// Query ACCOUNTS table
-$sql = "SELECT USER_ID, USER_NAME, ACCESS_LEVEL FROM ACCOUNTS WHERE USER_NAME = ? AND PASSWORD = ?";
-$params = [$username, $password];
-$stmt = $pdo->prepare($sql, $params);
-$stmt->execute();
-
-$row = $stmt->fetch(PDO::FETCH_ASSOC);
-    echo json_encode([
-        "success" => true,
-        "user" => [
-            "id" => $row['USER_ID'],
-            "username" => $row['USER_NAME'],
-            "accessLevel" => $row['ACCESS_LEVEL']
-        ]
-    ]);
+$users = json_decode($result, true);
+if (count($users) === 1 && $users[0]['password'] === $password) {
+    respond(200, array("login" => "success", "user" => $users[0]));
 } else {
-    http_response_code(401);
-    echo json_encode([
-        "success" => false,
-        "message" => "Invalid credentials"
-    ]);
+    respond(401, array("login" => "failed"));
 }
 ?>

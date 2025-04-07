@@ -1,99 +1,27 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
-$host = 'aws-0-us-east-1.pooler.supabase.com';
-$port = '5432';
-$db   = 'postgres';
-$user = 'postgres.oyicdamiuhqlwqckxjpe';
-$pass = 'your_actual_supabase_password';
-$dsn  = "pgsql:host=$host;port=$port;dbname=$db;";
-try {
-    $pdo = new PDO($dsn, $user, $pass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ]);
-} catch (PDOException $e) {
-    die("Connection failed: " . $e->getMessage());
+function respond($status, $data) {
+    header("Content-Type: application/json");
+    echo json_encode(["status" => $status, "response" => $data]);
 }
 
-header("Access-Control-Allow-Origin: http://localhost:3000");
-header("Access-Control-Allow-Methods: DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
-header("Access-Control-Allow-Credentials: true");
-header("Content-Type: application/json");
+$data = json_decode(file_get_contents("php://input"), true);
+$user_id = $data['user_id'];
+$ch = curl_init();
+$apiKey = getenv("SUPABASE_API_KEY");
 
-// Handle preflight request
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit();
-}
-
-require_once 'authUtils.php';
-
-// Database configuration
-    "CharacterSet" => "UTF-8"
-];
-
-// Connect to database
-if ($conn === false) {
-    http_response_code(500);
-    die(json_encode([
-        "error" => "Database connection failed",
-        "details" => sqlsrv_errors()
-    ]));
-}
-
-try {
-    $adminId = verifyAdminAccess($conn);
-    $userIdToDelete = $_GET['id'] ?? null;
-
-    if (!$userIdToDelete || !is_numeric($userIdToDelete)) {
-        http_response_code(400);
-        die(json_encode(["error" => "Valid user ID is required"]));
-    }
-
-    if ($userIdToDelete == $adminId) {
-        http_response_code(403);
-        die(json_encode(["error" => "Cannot delete your own account"]));
-    }
-
-    // First verify user exists
-    $checkSql = "SELECT USER_ID FROM ACCOUNTS WHERE USER_ID = ?";
-$stmt = $pdo->prepare($checkSql, [$userIdToDelete]);
-$stmt->execute();
-    
-        http_response_code(404);
-        die(json_encode(["error" => "User not found"]));
-    }
-
-    // Delete user
-    $deleteSql = "DELETE FROM ACCOUNTS WHERE USER_ID = ?";
-$stmt = $pdo->prepare($deleteSql, [$userIdToDelete]);
-$stmt->execute();
-    
-    if ($deleteStmt === false) {
-        throw new Exception("Delete operation failed");
-    }
-
-    // Check if any rows were actually deleted
-    if (sqlsrv_rows_affected($deleteStmt) === 0) {
-        http_response_code(404);
-        die(json_encode(["error" => "No user was deleted"]));
-    }
-
-    echo json_encode(["success" => true, "deletedId" => $userIdToDelete]);
-
-} catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode([
-        "error" => "Failed to delete user",
-        "details" => $e->getMessage(),
-        "sql_errors" => sqlsrv_errors()
-    ]);
-} finally {
-    if (isset($checkStmt)) sqlsrv_free_stmt($checkStmt);
-    if (isset($deleteStmt)) sqlsrv_free_stmt($deleteStmt);
-    if (isset($conn)) sqlsrv_close($conn);
-}
-?>
+curl_setopt($ch, CURLOPT_URL, "https://oyicdamiuhqlwqckxjpe.supabase.co/rest/v1/accounts?user_id=eq." . $user_id);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    "apikey: $apiKey",
+    "Authorization: Bearer $apiKey",
+    "Prefer: return=representation"
+]);
+$result = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+respond($httpCode, json_decode($result, true));
