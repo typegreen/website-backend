@@ -19,16 +19,6 @@ try {
 
 require_once 'authUtils.php';
 
-// Database connection
-    "CharacterSet" => "UTF-8"
-];
-
-if ($conn === false) {
-    header('Content-Type: application/json');
-    http_response_code(500);
-    die(json_encode(["error" => "Database connection failed"]));
-}
-
 try {
     $userId = verifyAdminAccess($conn); // Will exit if not admin
 
