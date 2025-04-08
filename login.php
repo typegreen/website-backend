@@ -35,7 +35,14 @@ curl_close($ch);
 
 $users = json_decode($result, true);
 if (is_array($users) && count($users) === 1 && $users[0]['password'] === $password) {
-    respond(200, array("login" => "success", "user" => $users[0]));
+    // Send only the necessary fields
+    $user = $users[0];
+    respond(200, array(
+        "login" => "success",
+        "user_id" => $user['user_id'],
+        "username" => $user['user_name'],
+        "access_level" => $user['access_level']
+    ));
 } else {
     respond(401, array("login" => "failed"));
 }
