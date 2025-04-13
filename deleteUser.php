@@ -14,12 +14,12 @@ if (!$apiKey) {
     exit;
 }
 
-$data = json_decode(file_get_contents("php://input"), true);
-if (!isset($data['user_id']) || !is_numeric($data['user_id'])) {
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     respond(400, array("error" => "Invalid or missing user_id"));
     exit;
 }
-$user_id = intval($data['user_id']);
+
+$user_id = intval($_GET['id']);
 
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, "https://oyicdamiuhqlwqckxjpe.supabase.co/rest/v1/accounts?user_id=eq." . $user_id);
