@@ -45,7 +45,7 @@ curl_close($store);
 $payload = [
     "sender" => [
         "name" => "AniMonitor",
-        "email" => "niplalvarez@gmail.com" // Brevo sender (must be verified)
+        "email" => "nlplalvarez@gmail.com" // Brevo sender (must be verified)
     ],
     "to" => [[ "email" => $email ]],
     "subject" => "Your AniMonitor 2FA Code",
