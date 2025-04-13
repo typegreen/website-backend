@@ -9,16 +9,13 @@ function respond($status, $data) {
 }
 
 $apiKey = getenv("SUPABASE_API_KEY");
-if (!$apiKey) {
-    respond(500, "❌ SUPABASE_API_KEY is missing.");
-    exit;
-}
-
 $data = json_decode(file_get_contents("php://input"), true);
+
 if (!isset($data['user_name']) || !isset($data['password'])) {
     respond(400, array("error" => "Missing credentials"));
     exit;
 }
+
 $user_name = $data['user_name'];
 $password = $data['password'];
 
@@ -30,18 +27,20 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, [
     "Authorization: Bearer $apiKey"
 ]);
 $result = curl_exec($ch);
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
 
 $users = json_decode($result, true);
+
 if (is_array($users) && count($users) === 1 && $users[0]['password'] === $password) {
-    // Send only the necessary fields
     $user = $users[0];
+
+    // 🛡️ Return status: pending_2fa instead of "logged in"
     respond(200, array(
-        "login" => "success",
+        "login" => "pending_2fa",
         "user_id" => $user['user_id'],
         "username" => $user['user_name'],
-        "access_level" => $user['access_level']
+        "access_level" => $user['access_level'],
+        "email" => $user['email']
     ));
 } else {
     respond(401, array("login" => "failed"));
