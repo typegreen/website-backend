@@ -2,14 +2,21 @@
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, apikey");
+header("Content-Type: application/json");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 function respond($status, $data) {
+    header("Access-Control-Allow-Origin: *"); // Ensure always present
     header("Content-Type: application/json");
     echo json_encode(["status" => $status, "response" => $data]);
 }
 
 $apiKey = getenv("SUPABASE_API_KEY");
-$brevoApiKey = getenv("BREVO_API_KEY"); // Set this in Railway or your .env
+$brevoApiKey = getenv("BREVO_API_KEY");
 
 $data = json_decode(file_get_contents("php://input"), true);
 
@@ -22,7 +29,7 @@ $email = $data["email"];
 $user_id = $data["user_id"];
 $code = rand(100000, 999999);
 
-// Step 1: Store the code in Supabase
+// Store code in Supabase
 $store = curl_init();
 curl_setopt($store, CURLOPT_URL, "https://oyicdamiuhqlwqckxjpe.supabase.co/rest/v1/two_fa_authcode");
 curl_setopt($store, CURLOPT_RETURNTRANSFER, true);
@@ -41,11 +48,11 @@ curl_setopt($store, CURLOPT_POSTFIELDS, json_encode([
 $storeResult = curl_exec($store);
 curl_close($store);
 
-// Step 2: Send email using Brevo SMTP API
+// Send email with Brevo API
 $payload = [
     "sender" => [
         "name" => "AniMonitor",
-        "email" => "nlplalvarez@gmail.com" // Brevo sender (must be verified)
+        "email" => "nlplalvarez@gmail.com"
     ],
     "to" => [[ "email" => $email ]],
     "subject" => "Your AniMonitor 2FA Code",
@@ -70,12 +77,10 @@ curl_setopt($send, CURLOPT_HTTPHEADER, [
 ]);
 curl_setopt($send, CURLOPT_POSTFIELDS, json_encode($payload));
 
-/*
 $response = curl_exec($send);
 $httpCode = curl_getinfo($send, CURLINFO_HTTP_CODE);
 curl_close($send);
 
-// Step 3: Respond based on email delivery status
 if ($httpCode === 201) {
     respond(200, "2FA code sent to $email");
 } else {
@@ -85,16 +90,3 @@ if ($httpCode === 201) {
         "http_code" => $httpCode
     ]);
 }
-    */
-
-    $response = curl_exec($send);
-    $httpCode = curl_getinfo($send, CURLINFO_HTTP_CODE);
-    curl_close($send);
-    
-    // TEMP: Always return Brevo debug response
-    respond($httpCode, [
-        "raw_response" => $response,
-        "http_code" => $httpCode,
-        "email_sent_to" => $email
-    ]);
-    

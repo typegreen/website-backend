@@ -2,15 +2,15 @@
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, apikey");
-header("Content-Type: application/json"); // Always return JSON
+header("Content-Type: application/json");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-  http_response_code(200);
-  exit;
+    http_response_code(200);
+    exit;
 }
 
-
 function respond($status, $data) {
+    header("Access-Control-Allow-Origin: *"); // Add this to prevent CORS block
     header("Content-Type: application/json");
     echo json_encode(["status" => $status, "response" => $data]);
 }
@@ -21,7 +21,7 @@ $data = json_decode(file_get_contents("php://input"), true);
 $user_id = $data["user_id"];
 $input_code = $data["code"];
 
-// STEP 1: Fetch the code from Supabase
+// Step 1: Fetch the code from Supabase
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, "https://oyicdamiuhqlwqckxjpe.supabase.co/rest/v1/two_fa_authcode?user_id=eq.$user_id");
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -29,7 +29,6 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, [
     "apikey: $apiKey",
     "Authorization: Bearer $apiKey"
 ]);
-
 $result = curl_exec($ch);
 curl_close($ch);
 $records = json_decode($result, true);
@@ -41,13 +40,13 @@ if (!is_array($records) || count($records) === 0) {
 
 $record = $records[0];
 
-// STEP 2: Check if code matches
+// Step 2: Check if code matches
 if ((string)$record["code"] !== (string)$input_code) {
     respond(403, "Incorrect code.");
     exit;
 }
 
-// STEP 3: Check if code is expired
+// Step 3: Check if expired
 $currentTime = strtotime("now");
 $expiryTime = strtotime($record["expiry"]);
 if ($currentTime > $expiryTime) {
@@ -55,7 +54,7 @@ if ($currentTime > $expiryTime) {
     exit;
 }
 
-// STEP 4: Delete the code after success
+// Step 4: Delete the code from Supabase
 $delete = curl_init();
 curl_setopt($delete, CURLOPT_URL, "https://oyicdamiuhqlwqckxjpe.supabase.co/rest/v1/two_fa_authcode?user_id=eq.$user_id");
 curl_setopt($delete, CURLOPT_RETURNTRANSFER, true);
@@ -68,7 +67,7 @@ curl_setopt($delete, CURLOPT_HTTPHEADER, [
 curl_exec($delete);
 curl_close($delete);
 
-// STEP 5: Fetch full user details
+// Step 5: Fetch full user info
 $userFetch = curl_init();
 curl_setopt($userFetch, CURLOPT_URL, "https://oyicdamiuhqlwqckxjpe.supabase.co/rest/v1/accounts?user_id=eq.$user_id");
 curl_setopt($userFetch, CURLOPT_RETURNTRANSFER, true);
