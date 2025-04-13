@@ -1,71 +1,87 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, apikey");
 
 function respond($status, $data) {
-  header("Content-Type: application/json");
-  echo json_encode(["status" => $status, "response" => $data]);
+    header("Content-Type: application/json");
+    echo json_encode(["status" => $status, "response" => $data]);
 }
 
 $apiKey = getenv("SUPABASE_API_KEY");
 $data = json_decode(file_get_contents("php://input"), true);
 
 $user_id = $data["user_id"];
-$inputCode = $data["code"];
+$input_code = $data["code"];
 
-// Fetch the latest 2FA code for the user
+// STEP 1: Fetch the code from Supabase
 $ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, "https://oyicdamiuhqlwqckxjpe.supabase.co/rest/v1/two_fa_authcode?user_id=eq.$user_id&order=expiry.desc&limit=1");
+curl_setopt($ch, CURLOPT_URL, "https://oyicdamiuhqlwqckxjpe.supabase.co/rest/v1/two_fa_authcode?user_id=eq.$user_id");
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_HTTPHEADER, [
-  "apikey: $apiKey",
-  "Authorization: Bearer $apiKey"
+    "apikey: $apiKey",
+    "Authorization: Bearer $apiKey"
 ]);
+
 $result = curl_exec($ch);
 curl_close($ch);
+$records = json_decode($result, true);
 
-$codes = json_decode($result, true);
-
-if (count($codes) === 0) {
-  respond("error", "Code not found. Please try again.");
-  exit;
+if (!is_array($records) || count($records) === 0) {
+    respond(401, "No 2FA code found.");
+    exit;
 }
 
-$storedCode = $codes[0]["code"];
-$expiry = strtotime($codes[0]["expiry"]);
-$now = time();
+$record = $records[0];
 
-if ($inputCode != $storedCode) {
-  respond("error", "Incorrect code.");
-  exit;
+// STEP 2: Check if code matches
+if ((string)$record["code"] !== (string)$input_code) {
+    respond(403, "Incorrect code.");
+    exit;
 }
 
-if ($now > $expiry) {
-  respond("error", "Code expired.");
-  exit;
+// STEP 3: Check if code is expired
+$currentTime = strtotime("now");
+$expiryTime = strtotime($record["expiry"]);
+if ($currentTime > $expiryTime) {
+    respond(403, "Code expired.");
+    exit;
 }
 
-// Fetch user info again for login
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, "https://oyicdamiuhqlwqckxjpe.supabase.co/rest/v1/accounts?user_id=eq." . $user_id);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
-  "apikey: $apiKey",
-  "Authorization: Bearer $apiKey"
+// STEP 4: Delete the code after success
+$delete = curl_init();
+curl_setopt($delete, CURLOPT_URL, "https://oyicdamiuhqlwqckxjpe.supabase.co/rest/v1/two_fa_authcode?user_id=eq.$user_id");
+curl_setopt($delete, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($delete, CURLOPT_CUSTOMREQUEST, "DELETE");
+curl_setopt($delete, CURLOPT_HTTPHEADER, [
+    "apikey: $apiKey",
+    "Authorization: Bearer $apiKey",
+    "Prefer: return=representation"
 ]);
-$userResult = curl_exec($ch);
-curl_close($ch);
+curl_exec($delete);
+curl_close($delete);
 
-$userInfo = json_decode($userResult, true);
+// STEP 5: Fetch full user details
+$userFetch = curl_init();
+curl_setopt($userFetch, CURLOPT_URL, "https://oyicdamiuhqlwqckxjpe.supabase.co/rest/v1/accounts?user_id=eq.$user_id");
+curl_setopt($userFetch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($userFetch, CURLOPT_HTTPHEADER, [
+    "apikey: $apiKey",
+    "Authorization: Bearer $apiKey"
+]);
+$userResult = curl_exec($userFetch);
+curl_close($userFetch);
 
-if (count($userInfo) === 1) {
-  $user = $userInfo[0];
-  respond("success", [
-    "user_id" => $user["user_id"],
-    "username" => $user["user_name"],
-    "access_level" => $user["access_level"]
-  ]);
+$userData = json_decode($userResult, true);
+if (is_array($userData) && count($userData) > 0) {
+    $user = $userData[0];
+    respond(200, [
+        "login" => "success",
+        "user_id" => $user["user_id"],
+        "username" => $user["user_name"],
+        "access_level" => $user["access_level"],
+        "email" => $user["email"]
+    ]);
 } else {
-  respond("error", "User not found.");
+    respond(404, "User not found.");
 }
