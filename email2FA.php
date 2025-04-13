@@ -70,6 +70,7 @@ curl_setopt($send, CURLOPT_HTTPHEADER, [
 ]);
 curl_setopt($send, CURLOPT_POSTFIELDS, json_encode($payload));
 
+/*
 $response = curl_exec($send);
 $httpCode = curl_getinfo($send, CURLINFO_HTTP_CODE);
 curl_close($send);
@@ -84,3 +85,16 @@ if ($httpCode === 201) {
         "http_code" => $httpCode
     ]);
 }
+    */
+
+    $response = curl_exec($send);
+    $httpCode = curl_getinfo($send, CURLINFO_HTTP_CODE);
+    curl_close($send);
+    
+    // TEMP: Always return Brevo debug response
+    respond($httpCode, [
+        "raw_response" => $response,
+        "http_code" => $httpCode,
+        "email_sent_to" => $email
+    ]);
+    
