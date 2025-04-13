@@ -11,13 +11,21 @@ function respond($status, $data) {
 $ch = curl_init();
 $apiKey = getenv("SUPABASE_API_KEY");
 
-curl_setopt($ch, CURLOPT_URL, "https://oyicdamiuhqlwqckxjpe.supabase.co/rest/v1/detection_logs");
+$userId = $_GET['user_id'] ?? null;
+$url = "https://oyicdamiuhqlwqckxjpe.supabase.co/rest/v1/detection_logs";
+if ($userId) {
+    $url .= "?user_id=eq.$userId";
+}
+
+curl_setopt($ch, CURLOPT_URL, $url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_HTTPHEADER, [
     "apikey: $apiKey",
     "Authorization: Bearer $apiKey"
 ]);
+
 $result = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
+
 respond($httpCode, json_decode($result, true));
