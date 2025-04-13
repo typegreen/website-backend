@@ -78,5 +78,9 @@ curl_close($send);
 if ($httpCode === 201) {
     respond(200, "2FA code sent to $email");
 } else {
-    respond(500, "Failed to send 2FA code. Brevo response: $response");
+    respond(500, [
+        "error" => "Failed to send 2FA code.",
+        "brevo_response" => $response,
+        "http_code" => $httpCode
+    ]);
 }
