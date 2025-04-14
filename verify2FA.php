@@ -10,51 +10,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 function respond($status, $data) {
-    header("Access-Control-Allow-Origin: *"); // Add this to prevent CORS block
-    header("Content-Type: application/json");
     echo json_encode(["status" => $status, "response" => $data]);
+    exit;
 }
 
 $apiKey = getenv("SUPABASE_API_KEY");
 $data = json_decode(file_get_contents("php://input"), true);
 
-$user_id = $data["user_id"];
-$input_code = $data["code"];
+$user_id = $data["user_id"] ?? null;
+$input_code = $data["code"] ?? null;
 
-// Step 1: Fetch the code from Supabase
+if (!$user_id || !$input_code) {
+    respond(400, "Missing user_id or code.");
+}
+
+// STEP 1: Get latest (most recent) code for user
 $ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, "https://oyicdamiuhqlwqckxjpe.supabase.co/rest/v1/two_fa_authcode?user_id=eq.$user_id");
+curl_setopt($ch, CURLOPT_URL, "https://oyicdamiuhqlwqckxjpe.supabase.co/rest/v1/two_fa_authcode?user_id=eq.$user_id&order=expiry.desc&limit=1");
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_HTTPHEADER, [
     "apikey: $apiKey",
     "Authorization: Bearer $apiKey"
 ]);
+
 $result = curl_exec($ch);
 curl_close($ch);
 $records = json_decode($result, true);
 
 if (!is_array($records) || count($records) === 0) {
     respond(401, "No 2FA code found.");
-    exit;
 }
 
 $record = $records[0];
+$stored_code = (string)$record["code"];
+$expiry_time = strtotime($record["expiry"]);
+$current_time = time();
 
-// Step 2: Check if code matches
-if ((string)$record["code"] !== (string)$input_code) {
+if ((string)$input_code !== $stored_code) {
     respond(403, "Incorrect code.");
-    exit;
 }
 
-// Step 3: Check if expired
-$currentTime = strtotime("now");
-$expiryTime = strtotime($record["expiry"]);
-if ($currentTime > $expiryTime) {
+if ($current_time > $expiry_time) {
     respond(403, "Code expired.");
-    exit;
 }
 
-// Step 4: Delete the code from Supabase
+// STEP 2: Delete used 2FA code
 $delete = curl_init();
 curl_setopt($delete, CURLOPT_URL, "https://oyicdamiuhqlwqckxjpe.supabase.co/rest/v1/two_fa_authcode?user_id=eq.$user_id");
 curl_setopt($delete, CURLOPT_RETURNTRANSFER, true);
@@ -67,7 +67,7 @@ curl_setopt($delete, CURLOPT_HTTPHEADER, [
 curl_exec($delete);
 curl_close($delete);
 
-// Step 5: Fetch full user info
+// STEP 3: Get full user data
 $userFetch = curl_init();
 curl_setopt($userFetch, CURLOPT_URL, "https://oyicdamiuhqlwqckxjpe.supabase.co/rest/v1/accounts?user_id=eq.$user_id");
 curl_setopt($userFetch, CURLOPT_RETURNTRANSFER, true);
@@ -75,10 +75,11 @@ curl_setopt($userFetch, CURLOPT_HTTPHEADER, [
     "apikey: $apiKey",
     "Authorization: Bearer $apiKey"
 ]);
+
 $userResult = curl_exec($userFetch);
 curl_close($userFetch);
-
 $userData = json_decode($userResult, true);
+
 if (is_array($userData) && count($userData) > 0) {
     $user = $userData[0];
     respond(200, [
