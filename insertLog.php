@@ -1,10 +1,10 @@
-<?php
 header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type");
 
 $data = json_decode(file_get_contents("php://input"), true);
 
+// Validate required fields
 $required = ["location", "date", "time", "image_code", "rice_crop_image", "classification", "user_id"];
 foreach ($required as $key) {
     if (!isset($data[$key])) {
@@ -13,20 +13,27 @@ foreach ($required as $key) {
     }
 }
 
-// 🔒 TODO: Replace with your actual MySQL credentials
-$conn = new mysqli("your_host", "your_user", "your_password", "your_database");
+// 🔧 Replace with your real credentials
+$host = getenv("DB_HOST");
+$user = getenv("DB_USER");
+$pass = getenv("DB_PASS");
+$db = getenv("DB_NAME");
 
-// ✅ Connection error logging
+$conn = new mysqli($host, $user, $pass, $db);
+
 if ($conn->connect_error) {
-    echo json_encode(["error" => "Database connection failed", "details" => $conn->connect_error]);
+    echo json_encode(["error" => "Connection failed: " . $conn->connect_error]);
     exit;
 }
 
-$stmt = $conn->prepare("INSERT INTO detection_logs (location, date_of_detection, time_of_detection, image_code, rice_crop_image, classification, user_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
+$stmt = $conn->prepare("
+    INSERT INTO detection_logs 
+    (location, date_of_detection, time_of_detection, image_code, rice_crop_image, classification, user_id) 
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+");
 
 if (!$stmt) {
-    echo json_encode(["error" => "Prepare failed", "details" => $conn->error]);
-    $conn->close();
+    echo json_encode(["error" => "Prepare failed: " . $conn->error]);
     exit;
 }
 
@@ -41,13 +48,11 @@ $stmt->bind_param(
     $data["user_id"]
 );
 
-// ✅ Log execution result
 if ($stmt->execute()) {
     echo json_encode(["success" => true]);
 } else {
-    echo json_encode(["error" => "Execute failed", "details" => $stmt->error]);
+    echo json_encode(["error" => "Execute failed: " . $stmt->error]);
 }
 
 $stmt->close();
 $conn->close();
-?>
