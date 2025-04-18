@@ -1,6 +1,7 @@
 <?php
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type");
+
 $bucket = "rice-crop-images";
 $file = $_FILES['file'];
 
@@ -38,14 +39,20 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $response = curl_exec($ch);
 
-if (curl_errno($ch)) {
-    echo json_encode(["error" => curl_error($ch)]);
+// ✅ Check result of cURL
+if (!$response || curl_errno($ch)) {
+    echo json_encode([
+        "error" => "Supabase upload failed",
+        "details" => curl_error($ch),
+        "response" => $response
+    ]);
+    curl_close($ch);
     exit;
 }
 
 curl_close($ch);
 
-// ✅ Return public image URL
+// ✅ Return full public URL
 $publicUrl = "$baseUrl/storage/v1/object/public/$bucket/$uniqueFileName";
 echo json_encode(["url" => $publicUrl]);
 ?>
