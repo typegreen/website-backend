@@ -15,7 +15,7 @@ $fileName = basename($file["name"]);
 $uniqueFileName = uniqid() . "_" . $fileName;
 
 // ✅ Get Supabase values from environment
-$apiKey = getenv("SUPABASE_PUBLIC_API_KEY");
+$apiKey = getenv("SUPABASE_API_KEY");
 $baseUrl = getenv("SUPABASE_BASE_URL");
 
 if (!$apiKey || !$baseUrl) {
