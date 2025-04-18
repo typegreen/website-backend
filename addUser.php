@@ -16,7 +16,7 @@ if (!$apiKey) {
 
 $data = json_decode(file_get_contents("php://input"), true);
 
-if (!isset($data['username']) || !isset($data['password']) || !isset($data['accessLevel'])) {
+if (!isset($data['username']) || !isset($data['password']) || !isset($data['accessLevel']) || !isset($data['email'])) {
     respond(400, "Missing required fields.");
     exit;
 }
@@ -34,7 +34,8 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, [
 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
     "user_name" => $data["username"],
     "password" => $data["password"],
-    "access_level" => $data["accessLevel"]
+    "access_level" => $data["accessLevel"],
+    "email" => $data["email"]
 ]));
 $result = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
