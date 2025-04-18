@@ -1,5 +1,8 @@
 <?php
 header("Content-Type: application/json");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: Content-Type");
+
 $data = json_decode(file_get_contents("php://input"), true);
 
 $required = ["location", "date", "time", "image_code", "rice_crop_image", "classification", "user_id"];
