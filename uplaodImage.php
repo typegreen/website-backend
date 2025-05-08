@@ -11,9 +11,12 @@ if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
     exit;
 }
 
+// ✅ Generate a unique file name, preserving the original extension
+$originalFileName = $file["name"];
+$extension = pathinfo($originalFileName, PATHINFO_EXTENSION);
+$uniqueFileName = uniqid() . "_" . bin2hex(random_bytes(4)) . "." . $extension;
+
 $tempPath = $file["tmp_name"];
-$fileName = basename($file["name"]);
-$uniqueFileName = uniqid() . "_" . $fileName;
 
 // ✅ Get Supabase credentials from environment variables
 $apiKey = getenv("SUPABASE_API_KEY");
